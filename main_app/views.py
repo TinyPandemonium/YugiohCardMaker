@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from .models import Card
 
 cards = [
   {'name': 'Blue Eyes'},
@@ -12,6 +13,11 @@ def about(request):
     return render(request, 'about.html')
 
 def cards_index(request):
+  cards = Card.objects.all()
   return render(request, 'cards/index.html', {
     'cards': cards
   })
+
+def cards_detail(request, card_id):
+  card = Card.objects.get(id=card_id)
+  return render(request, 'cards/detail.html', { 'card': card })
