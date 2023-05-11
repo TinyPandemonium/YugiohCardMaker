@@ -53,8 +53,6 @@ soupsieve==2.3.2.post1
 sqlparse==0.4.4
 systemd-python==234
 typing-extensions==4.1.1
-ubuntu-advantage-tools==27.2
-ubuntu-drivers-common==0.0.0
 ufw==0.36
 unattended-upgrades==0.1
 urllib3==1.26.15
