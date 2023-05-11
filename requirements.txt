@@ -51,7 +51,6 @@ simplejson==3.13.2
 six==1.16.0
 soupsieve==2.3.2.post1
 sqlparse==0.4.4
-system-service==0.3
 systemd-python==234
 typing-extensions==4.1.1
 ubuntu-advantage-tools==27.2
