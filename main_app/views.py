@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Card, Photo
 from PIL import Image, ImageDraw, ImageFont
+from collections.abc import MutableMapping
 from io import BytesIO
 import uuid
 import boto3
@@ -14,6 +15,7 @@ import tempfile
 import shutil
 import textwrap
 from .models import Card
+
 
 def home(request):
     return render(request, 'home.html')
@@ -177,7 +179,7 @@ def add_photo(request, card_id):
             # Delete the temporary directory and its contents
             shutil.rmtree(temp_dir)
 
-        except Exception as e:
-            print('An error occurred uploading file to S3')
-            print(e)
+        except MutableMapping as e:
+          print('An error occurred uploading file to S3')
+          print(e)
     return redirect('detail', card_id=card_id)

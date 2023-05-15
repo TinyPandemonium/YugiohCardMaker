@@ -3,9 +3,6 @@
 import os
 import sys
 
-if sys.version_info.major == 3 and sys.version_info.minor >= 10:
-    import collections
-    setattr(collections, "MutableMapping", collections.abc.MutableMapping)
 
 def main():
     """Run administrative tasks."""
