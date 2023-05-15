@@ -65,7 +65,7 @@ def signup(request):
 class ImageManipulator:
     @staticmethod
     def manipulate_image(card):
-        background_image = Image.open('main_app/card_template/base.png')
+        background_image = Image.open('static/card_template/base.png')
         draw = ImageDraw.Draw(background_image)
 
         # Set the coordinates for each attribute
@@ -90,7 +90,7 @@ class ImageManipulator:
         attack_font_size = 14
         defense_font_size = 14
 
-        font_path = 'main_app/card_template/text.ttf'
+        font_path = 'static/card_template/text.ttf'
         name_font = ImageFont.truetype(font_path, size=name_font_size)
         description_font = ImageFont.truetype(font_path, size=description_font_size)
         attack_font = ImageFont.truetype(font_path, size=attack_font_size)
@@ -103,7 +103,7 @@ class ImageManipulator:
         draw.text(defense_coords, f"{card.defense}", fill=(0, 0, 0), font=defense_font)
 
         # Load the star image
-        star_image = Image.open('main_app/card_template/star.png')
+        star_image = Image.open('static/card_template/star.png')
 
         # Calculate the number of star images to be placed
         num_stars = min(card.star, 12)
@@ -117,7 +117,7 @@ class ImageManipulator:
             background_image.paste(star_image, (star_x, star_y), mask=star_image)
             star_x -= star_image.width
         # Load the attribute image based on the selected attribute
-        attribute_image_path = f"main_app/card_template/{card.attribute.lower()}.png"
+        attribute_image_path = f"static/card_template/{card.attribute.lower()}.png"
         attribute_image = Image.open(attribute_image_path)
 
         # Paste the attribute image onto the background image
