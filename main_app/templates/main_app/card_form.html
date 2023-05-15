@@ -6,6 +6,20 @@
 {% else %}
     <h1>Add Card</h1>
 {% endif %}
+<style>
+  .btn {
+    border: 2px solid white;
+    color: white;
+    background-color: transparent;
+    padding: 8px 16px;
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  .btn:hover {
+    background-color: #FF9138;
+    color: black;
+  }
+</style>
   <form action="" method="POST">
     {% csrf_token %}
     <table>

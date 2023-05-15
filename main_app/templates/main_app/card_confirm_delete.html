@@ -1,6 +1,23 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+  .btn {
+    border: 2px solid white;
+    color: white;
+    background-color: transparent;
+    padding: 8px 16px;
+    transition: background-color 0.3s, color 0.3s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn:hover {
+    background-color: #FF9138;
+    color: black;
+  }
+</style>
+
   <h1>Delete Card</h1>
 
   <h4>Are you sure you want to delete <span class="teal-text">{{ object.name }}</span>?</h4>
@@ -8,6 +25,6 @@
   <form action="" method="POST">
     {% csrf_token %}
     <input type="submit" value="Yes - Delete!" class="btn">
-    <a href="{% url 'detail' card.id %}">Cancel</a>
+    <a href="{% url 'detail' card.id %}" class="btn">Cancel</a>
   </form>
 {% endblock %}

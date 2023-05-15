@@ -1,10 +1,51 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<style>
+  /* CSS styles for the form */
+  form {
+    background-color: #3A3E4B;
+    color: white;
+    padding: 20px;
+  }
+
+  .card-content {
+    background-color: #3A3E4B;
+    color: white;
+    padding: 20px;
+  }
+
+  .card-action {
+    background-color: #3A3E4B;
+    color: white;
+    padding: 20px;
+  }
+
+  .card-panel {
+    background-color: #3A3E4B;
+    color: white;
+    padding: 20px;
+  }
+
+  .btn {
+    border: 2px solid white;
+    color: white;
+    background-color: transparent;
+    padding: 8px 16px;
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  .btn:hover {
+    background-color: #FF9138;
+    color: black;
+  }
+</style>
+
 <h1>Card Details</h1>
 
 <div class="card">
   <div class="card-content">
+    
     <span class="card-title">{{ card.name }}</span>
     <p>Description: {{ card.description|linebreaks }}</p>
     <p>Attribute: {{ card.attribute}}</p>
@@ -13,8 +54,8 @@
     <p>Defense: {{ card.defense }}</p>
   </div>
   <div class="card-action">
-    <a href="{% url 'cards_update' card.id %}">Edit</a>
-    <a href="{% url 'cards_delete' card.id %}">Delete</a>
+    <a class ="btn" href="{% url 'cards_update' card.id %}">Edit</a>
+    <a class ="btn" href="{% url 'cards_delete' card.id %}">Delete</a>
   </div>
   {% for photo in card.photo_set.all %}
       <img class="responsive-img card-panel" src="{{photo.url}}">

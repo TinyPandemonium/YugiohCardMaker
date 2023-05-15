@@ -3,8 +3,31 @@
 
 <h1>Card List</h1>
 
+<style>
+  
+  .card-list {
+    background-color: #3A3E4B;
+    color: white;
+    padding: 20px;
+    transition: transform 0.3s;
+  }
+
+  .card-list:hover {
+    transform: scale(1.1);
+  }
+
+  .card-list a {
+    color: white;
+    text-decoration: none;
+  }
+
+  .card-list a:hover {
+    color: #FF9138;
+  }
+</style>
+
 {% for card in cards %}
-  <div class="card">
+  <div class="card-list">
     <a href="{% url 'detail' card.id %}">
         <div class="card-content">
           <span class="card-title">{{ card.name }}</span>
@@ -14,3 +37,4 @@
 {% endfor %}
 
 {% endblock %}
+
