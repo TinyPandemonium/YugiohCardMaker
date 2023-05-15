@@ -180,7 +180,7 @@ def add_photo(request, card_id):
             # Delete the temporary directory and its contents
             shutil.rmtree(temp_dir)
 
-        except (AttributeError, TypeError) as e:
+        except MutableMapping as e:
           print('An error occurred uploading file to S3')
           print(e)
           traceback.print_exc()
