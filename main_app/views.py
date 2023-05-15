@@ -5,14 +5,14 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Card, Photo
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-import psycopg2
 import uuid
 import boto3
 import os
-
-
+import tempfile
+import shutil
+import textwrap
 from .models import Card
 
 def home(request):
@@ -33,96 +33,16 @@ def cards_detail(request, card_id):
   card = Card.objects.get(id=card_id)
   return render(request, 'cards/detail.html', { 'card': card })
 
-class myTemplate():
-    def __init__(self, name, description, image, user):
-        self.name = name
-        self.description = description
-        self.image = image
-        self.user = user
-        print('hello init')
-    print('hello')    
-    
-    def draw(self):
-        template_folder = 'main_app/card_template'
-        template_filename = 'base.png'
-        template_path = os.path.join(template_folder, template_filename)
-        print(template_path)
-        img = Image.open(template_path, 'r').convert('RGB')  # Opens Template Image
-
-        if self.image:
-            # Open and resize the uploaded image
-            uploaded_img = Image.open(self.image).convert("RGBA")
-            uploaded_img = uploaded_img.resize((278, int(uploaded_img.size[1] * (278 / uploaded_img.size[0]))))
-
-            # Calculate the position to paste the uploaded image
-            paste_x = 31
-            paste_y = 141
-
-            # Calculate the maximum width and height for the uploaded image to fit inside the base image
-            max_width = 278
-            max_height = 322
-
-            # Adjust the position and size of the uploaded image if it exceeds the maximum width or height
-            if uploaded_img.width > max_width:
-                uploaded_img = uploaded_img.resize((max_width, int(uploaded_img.height * (max_width / uploaded_img.width))))
-            if uploaded_img.height > max_height:
-                uploaded_img = uploaded_img.resize((int(uploaded_img.width * (max_height / uploaded_img.height)), max_height))
-
-            # Calculate the position to center the uploaded image within the defined area in the base image
-            paste_x += (max_width - uploaded_img.width) // 2
-            paste_y += (max_height - uploaded_img.height) // 2
-
-            # Paste the uploaded image into the base image
-            img.paste(uploaded_img, (paste_x, paste_y), mask=uploaded_img)
-        
-        imgdraw = ImageDraw.Draw(img)  # Create a canvas
-        imgdraw.text((515, 152), self.name, (0, 0, 0))  # Draws name
-        imgdraw.text((654, 231), self.description, (0, 0, 0))  # Draws description
-
-        image_bytes = BytesIO()
-        img.save(image_bytes, format='PNG')
-        image_bytes.seek(0)
-
-        conn = psycopg2.connect(
-            database="TinyPandemonium/yugiohcardmaker",
-            user="TinyPandemonium",
-            password=os.environ['DB_PASSWORD'],
-            host="db.bit.io",
-            port="5432"
-        )
-
-        cursor = conn.cursor()
-
-        cursor.execute("INSERT INTO card (user_id, name, description, image) VALUES (%s, %s, %s, %s)",
-                       (self.user.id, self.name, self.description, psycopg2.Binary(image_bytes.read())))
-
-        # Commit the transaction
-        conn.commit()
-
-        # Close the cursor and the database connection
-        cursor.close()
-        conn.close()
-
-
 class CardCreate(LoginRequiredMixin, CreateView):
-    model = Card
-    fields = ['name', 'attribute', 'description', 'star']
-
-    def form_valid(self, form):
-        form.instance.user = self.request.user
-        template = myTemplate(
-            name=form.cleaned_data['name'],
-            description=form.cleaned_data['description'],
-            image=form.cleaned_data.get('image', None),
-            user=self.request.user
-        )
-        template.draw()
-        return super().form_valid(form)
-
+  model = Card
+  fields = ['name', 'attribute', 'description', 'star', 'attack', 'defense']
+  def form_valid(self, form):
+    form.instance.user = self.request.user
+    return super().form_valid(form)
 
 class CardUpdate(LoginRequiredMixin, UpdateView):
   model = Card
-  fields = ['name', 'attribute', 'description', 'star']
+  fields = ['name', 'attribute', 'description', 'star', 'attack', 'defense']
 
 class CardDelete(LoginRequiredMixin, DeleteView):
   model = Card
@@ -142,33 +62,122 @@ def signup(request):
   context = {'form': form, 'error_message': error_message}
   return render(request, 'registration/signup.html', context)
 
+class ImageManipulator:
+    @staticmethod
+    def manipulate_image(card):
+        background_image = Image.open('main_app/card_template/base.png')
+        draw = ImageDraw.Draw(background_image)
+
+        # Set the coordinates for each attribute
+        name_coords = (30, 40)
+        description_coords = (30, 460)
+        attack_coords = (270, 558)
+        defense_coords = (355, 558)
+
+        # Wrap the text if it exceeds the maximum width
+        wrapped_name = textwrap.fill(card.name, width=70)
+        wrapped_description = textwrap.fill(card.description, width=85)
+
+        # Define minimum and maximum font sizes
+        min_font_size = 7
+        min_name_font = 13
+        max_font_size = 30
+        max_name_font = 40
+
+        # Calculate font sizes based on text lengths
+        name_font_size = max(min_name_font, min(max_name_font, 30 - len(card.name)))
+        description_font_size = max(min_font_size, min(max_font_size, 50 - len(card.description)))
+        attack_font_size = 14
+        defense_font_size = 14
+
+        font_path = 'main_app/card_template/text.ttf'
+        name_font = ImageFont.truetype(font_path, size=name_font_size)
+        description_font = ImageFont.truetype(font_path, size=description_font_size)
+        attack_font = ImageFont.truetype(font_path, size=attack_font_size)
+        defense_font = ImageFont.truetype(font_path, size=defense_font_size)
+
+        # Write each attribute to the image with their respective coordinates and font
+        draw.text(name_coords, wrapped_name, fill=(0, 0, 0), font=name_font)
+        draw.text(description_coords, wrapped_description, fill=(0, 0, 0), font=description_font)
+        draw.text(attack_coords, f"{card.attack}", fill=(0, 0, 0), font=attack_font)
+        draw.text(defense_coords, f"{card.defense}", fill=(0, 0, 0), font=defense_font)
+
+        # Load the star image
+        star_image = Image.open('main_app/card_template/star.png')
+
+        # Calculate the number of star images to be placed
+        num_stars = min(card.star, 12)
+
+        # Set the initial position for the star images
+        star_x = 350
+        star_y = 80
+
+        # Multiply the star image based on the card's star field
+        for _ in range(num_stars):
+            background_image.paste(star_image, (star_x, star_y), mask=star_image)
+            star_x -= star_image.width
+        # Load the attribute image based on the selected attribute
+        attribute_image_path = f"main_app/card_template/{card.attribute.lower()}.png"
+        attribute_image = Image.open(attribute_image_path)
+
+        # Paste the attribute image onto the background image
+        attribute_width = 30
+        attribute_height = 30
+        attribute_image = attribute_image.resize((attribute_width, attribute_height))
+        attribute_x = 360
+        attribute_y = 34
+        background_image.paste(attribute_image, (attribute_x, attribute_y), mask=attribute_image)
+
+        return background_image
+        
+
 @login_required
 def add_photo(request, card_id):
     photo_file = request.FILES.get('photo-file', None)
     if photo_file:
+        Photo.objects.filter(card_id=card_id).delete()
         s3 = boto3.client('s3')
         key = uuid.uuid4().hex[:6] + photo_file.name[photo_file.name.rfind('.'):]
         try:
             bucket = os.environ['S3_BUCKET']
-            s3.upload_fileobj(photo_file, bucket, key)
-            url = f"{os.environ['S3_BASE_URL']}{bucket}/{key}"
-            Photo.objects.create(url=url, card_id=card_id)
+
+            # Create a temporary directory
+            temp_dir = tempfile.mkdtemp()
+
+            # Save the file temporarily in the directory
+            file_path = os.path.join(temp_dir, key)
+            with open(file_path, 'wb') as f:
+                for chunk in photo_file.chunks():
+                    f.write(chunk)
+
+            # Open the file using PIL
+            uploaded_image = Image.open(file_path)
+
+            # Perform the image manipulation
+            desired_width = 320
+            desired_height = 322
+            uploaded_image = uploaded_image.resize((desired_width, desired_height))
+            card = Card.objects.get(id=card_id)
+            background_image = ImageManipulator.manipulate_image(card)
+            background_image.paste(uploaded_image, (51, 111))
+
+            # Save the modified image to a buffer
+            image_buffer = BytesIO()
+            background_image.save(image_buffer, format='PNG')
+            image_buffer.seek(0)
+
+            # Upload the modified image to S3
+            modified_key = f"modified/{key}"
+            s3.upload_fileobj(image_buffer, bucket, modified_key)
+            modified_url = f"{os.environ['S3_BASE_URL']}{bucket}/{modified_key}"
+
+            # Create the Photo object
+            Photo.objects.create(url=modified_url, card_id=card_id)
+
+            # Delete the temporary directory and its contents
+            shutil.rmtree(temp_dir)
+
         except Exception as e:
             print('An error occurred uploading file to S3')
             print(e)
     return redirect('detail', card_id=card_id)
-
-
-@login_required
-def generate_card(request):
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        description = request.POST.get('description')
-        image = request.FILES.get('image')
-
-        template = myTemplate(name, description, image, request)
-        template.draw()
-
-        return redirect('cards')  # Redirect to the cards view after generating the card
-
-    return render(request, 'generate_card.html')

@@ -9,6 +9,8 @@
     <p>Description: {{ card.description|linebreaks }}</p>
     <p>Attribute: {{ card.attribute}}</p>
     <p>Star: {{ card.star}}</p>
+    <p>Attack: {{ card.attack }}</p>
+    <p>Defense: {{ card.defense }}</p>
   </div>
   <div class="card-action">
     <a href="{% url 'cards_update' card.id %}">Edit</a>

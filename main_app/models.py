@@ -4,14 +4,37 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 
 class Card(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=50)
     description = models.CharField(max_length=500)
-    attribute = models.CharField(max_length=6, default ='')
+    attribute_choices = (
+        ('Dark','Dark'),
+        ('Earth','Earth'),
+        ('Fire','Fire'),
+        ('Light','Light'),
+        ('Wind','Wind'),
+        ('Water','Water'),
+        ('Divine','Divine'),
+    )
+    attribute = models.CharField(max_length=6, choices=attribute_choices, default='Dark')
     star = models.IntegerField(
         default=1,
         validators=[
             MaxValueValidator(12),
             MinValueValidator(1),
+        ]
+    )
+    attack = models.IntegerField(
+        default=0,
+        validators=[
+            MaxValueValidator(9999),
+            MinValueValidator(0),
+        ]
+    )
+    defense = models.IntegerField(
+        default=0,
+        validators=[
+            MaxValueValidator(9999),
+            MinValueValidator(0),
         ]
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
