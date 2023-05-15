@@ -14,6 +14,7 @@ import os
 import tempfile
 import shutil
 import textwrap
+import traceback
 from .models import Card
 
 
@@ -179,7 +180,8 @@ def add_photo(request, card_id):
             # Delete the temporary directory and its contents
             shutil.rmtree(temp_dir)
 
-        except MutableMapping as e:
+        except Exception as e:
           print('An error occurred uploading file to S3')
           print(e)
+          traceback.print_exc()
     return redirect('detail', card_id=card_id)
